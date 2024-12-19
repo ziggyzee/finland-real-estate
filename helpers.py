@@ -54,7 +54,7 @@ def build_where_clause(
     return where_clause
 
 
-api_url = "http://127.0.0.1:8000/property-price-valuation"
+api_url = "http://51.20.64.222:8000/property-price-valuation/"
 
 # Function to call the API
 def call_api(payload):
