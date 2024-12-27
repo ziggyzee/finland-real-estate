@@ -1,8 +1,11 @@
 import streamlit as st
-import plotly.graph_objs as go
-import numpy as np
 import requests
+from typing import List
+import pandas as pd
+import plotly.figure_factory as ff
 
+def generate_key(unique_str: str):
+    return str(f"get-transactions-{unique_str}")
 
 def build_where_clause(
     postal_codes_input_text,
@@ -54,7 +57,7 @@ def build_where_clause(
     return where_clause
 
 
-api_url = "http://51.20.64.222:8000/property-price-valuation/"
+api_url = "http://0.0.0.0:8000/get-transactions/"
 
 # Function to call the API
 def call_api(payload):
@@ -80,7 +83,7 @@ def process_postal_codes(input_text):
 
 def format_currency(value):
     # Convert the value to thousands and round it
-    value_in_thousands = round(value / 1000)
+    value_in_thousands = round((value / 1000), 1)
 
     # Format the value as a string with the currency symbol
     formatted_value = f"€{value_in_thousands}k"
@@ -88,46 +91,65 @@ def format_currency(value):
     return formatted_value
 
 
-def plot_normal_distribution(mean, std_dev, sample_size):
-    # Generate data for the normal distribution
-    x = np.linspace(mean - 3 * std_dev, mean + 3 * std_dev, 1000)
-    y = (1 / (std_dev * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mean) / std_dev) ** 2)
-    y_scaled = y / y.max() * 0.5
+def display_kde_plot(min_prices_per_square_meter: List[float], max_prices_per_square_meter: List[float], key: str):
+    # Calculate the average price per square meter for each transaction
+    avg_prices_per_square_meter = [
+        (min_price + max_price) / 2
+        for min_price, max_price in zip(min_prices_per_square_meter, max_prices_per_square_meter)
+    ]
 
-    # Create the plotly figure
-    fig = go.Figure()
+    # Calculate statistics
+    mean_value = pd.Series(avg_prices_per_square_meter).mean()
+    median_value = pd.Series(avg_prices_per_square_meter).median()
+    q25_value = pd.Series(avg_prices_per_square_meter).quantile(0.25)
+    q75_value = pd.Series(avg_prices_per_square_meter).quantile(0.75)
+    min_value = min(avg_prices_per_square_meter)
+    max_value = max(avg_prices_per_square_meter)
 
-    hover_text = [f'The price of {format_currency(val)} has a likelihood of {prob:.0%}' for val, prob in zip(x, y_scaled)]
+    # Create the KDE plot
+    fig = ff.create_distplot([avg_prices_per_square_meter], group_labels=['Average Price per Square Meter'], show_hist=False, show_rug=False)
 
-    # Add the normal distribution curve
-    fig.add_trace(go.Scatter(
-        x=x,
-        y=y_scaled,
-        mode='lines',
-        name='',
-        fill='tozeroy',
-        hovertemplate='%{text}<extra></extra>',
-        text=hover_text,
-    ))
+    # Convert density to percentage points and set custom hover text
+    for trace in fig.data:
+        trace.y = trace.y * 100
+        trace.hovertemplate = 'Price per square meter: %{x:,.0f}<extra></extra>'
 
-    # Update the layout
+
+    # Add vertical lines for the statistics
+    for value, label, color, spacing in zip(
+        [mean_value, median_value, q25_value, q75_value, min_value, max_value],
+        ['Mean', 'Median', 'Q25', 'Q75', 'Min', 'Max'],
+        ['Red', 'Blue', 'Green', 'Green', 'Purple', 'Purple'],
+        [1, 0.9, 0.1, 0.1, 0.4, 0.4]
+    ):
+        fig.add_shape(
+            type="line",
+            x0=value,
+            y0=0,
+            x1=value,
+            y1=1,
+            xref='x',
+            yref='paper',
+            line=dict(color=color, width=2, dash="dash"),
+        )
+
+    # Find the maximum y value of the KDE plot
+    max_y_value = max(y for trace in fig.data for y in trace.y)
+
+    # Customize the layout
     fig.update_layout(
-        title=f'Estimated Price Distribution, based on {sample_size} transactions within the last 2 years',
-        xaxis_title='Price',
+        title='KDE Plot of Prices per Square Meter',
+        xaxis_title='Price per Square Meter',
+        yaxis_title='Density (%)',
+        yaxis=dict(range=[0, max_y_value * 1.1]),  # Set y-axis range slightly larger than the max y value
         xaxis=dict(
-            tickprefix='€',  # Add the € symbol as a prefix to the tick labels
-            tickformat=',.0f'  # Format the tick labels as integers with thousands separators
+            tickmode='linear',
+            tick0=0,
+            dtick=500  # Set tick interval to 500 euros
         ),
-        yaxis_title='Probability Density',
-        yaxis=dict(
-            tickformat='.0%',  # Format y-axis ticks as percentages
-            range=[0, 0.5]  # Ensure the y-axis range is from 0 to 0.5
-        ),
-        hoverlabel = dict(
-            font_size=16,  # Set the font size for hover text
-            font_family="Arial"
-        ),
+        showlegend=False,
     )
 
-    # Display the plot in Streamlit
-    st.plotly_chart(fig)
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGray', tickmode='linear', tick0=0, dtick=500)
+    # Display the chart in Streamlit
+    st.plotly_chart(fig, key=key)
