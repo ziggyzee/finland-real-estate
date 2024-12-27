@@ -295,7 +295,7 @@ def render_price_per_square_meter_estimations_tab():
             ]
             transactions = response_data["transactions"]
             sample_size = sum(transactions)
-            if sample_size > 2:
+            if sample_size > 4:
                 mean_value = pd.Series(avg_prices_per_square_meter).mean()
                 median_value = pd.Series(avg_prices_per_square_meter).median()
                 q25_value = pd.Series(avg_prices_per_square_meter).quantile(0.25)
@@ -320,7 +320,7 @@ def render_price_per_square_meter_estimations_tab():
                 st.markdown(
                     f"""
                     <h6 style='text-align: left; color: red;'> 
-                    Your search parameters yielded less than 2 property transactions.
+                    Your search parameters yielded less than 4 property transactions.
                     Please widen your filters in order to see results
                     </h6>
                     """,
@@ -341,47 +341,47 @@ def render_price_per_square_meter_estimations_tab():
 
         # Display the plot at the top
         with top_plot_placeholder:
-            if sample_size > 2:
+            if sample_size > 4:
                 display_kde_plot(min_prices, max_prices, "top")
 
-        with top_text_placeholder:
-            st.markdown(
-                f"""
-                <h6 style='text-align: left; color: red;'>Average square meter price: {format_currency(mean_value)} <br>
-                <span style='color: blue;'>Median square meter price: {format_currency(median_value)}</span> <br> 
-                <span style='color: green;'>50% of the relevant properties have a square meter price between {format_currency(q25_value)}
-                and {format_currency(q75_value)} (25-75 percentiles)</span> <br>
-                <span style='color: Purple;'>The lowest price per square meter is {format_currency(min_value)}
-                and the highest is {format_currency(max_value)}</span> <br>
-                <span style='color: black;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
-                </h6>
-                """,
-                unsafe_allow_html=True,
-            )
+            with top_text_placeholder:
+                st.markdown(
+                    f"""
+                    <h6 style='text-align: left; color: red;'>Average square meter price: {format_currency(mean_value)} <br>
+                    <span style='color: blue;'>Median square meter price: {format_currency(median_value)}</span> <br> 
+                    <span style='color: green;'>50% of the relevant properties have a square meter price between {format_currency(q25_value)}
+                    and {format_currency(q75_value)} (25-75 percentiles)</span> <br>
+                    <span style='color: Purple;'>The lowest price per square meter is {format_currency(min_value)}
+                    and the highest is {format_currency(max_value)}</span> <br>
+                    <span style='color: black;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
+                    </h6>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-
-        # Display the plot at the bottom
-        display_kde_plot(min_prices, max_prices, "bottom")
-        st.markdown(
-            f"""
-            <h6 style='text-align: left; color: red;'>Average square meter price: {format_currency(mean_value)} <br>
-            <span style='color: blue;'>Median square meter price: {format_currency(median_value)}</span> <br> 
-            <span style='color: green;'>50% of the relevant properties have a square meter price between {format_currency(q25_value)}
-            and {format_currency(q75_value)} (25-75 percentiles)</span> <br>
-            <span style='color: Purple;'>The lowest price per square meter is {format_currency(min_value)}
-            and the highest is {format_currency(max_value)}</span> <br>
-            <span style='color: black;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
-            </h6>
-            """,
-            unsafe_allow_html=True,
-        )
+            if sample_size > 4:
+                # Display the plot at the bottom
+                display_kde_plot(min_prices, max_prices, "bottom")
+                st.markdown(
+                    f"""
+                    <h6 style='text-align: left; color: red;'>Average square meter price: {format_currency(mean_value)} <br>
+                    <span style='color: blue;'>Median square meter price: {format_currency(median_value)}</span> <br> 
+                    <span style='color: green;'>50% of the relevant properties have a square meter price between {format_currency(q25_value)}
+                    and {format_currency(q75_value)} (25-75 percentiles)</span> <br>
+                    <span style='color: Purple;'>The lowest price per square meter is {format_currency(min_value)}
+                    and the highest is {format_currency(max_value)}</span> <br>
+                    <span style='color: black;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
+                    </h6>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
     else:
         with top_text_placeholder:
             st.markdown(
                 f"""
                 <h6 style='text-align: left; color: red;'> 
-                Your search parameters yielded less than 2 property transactions.
+                Your search parameters yielded less than 4 property transactions.
                 Please widen your filters in order to see results
                 </h6>
                 """,
