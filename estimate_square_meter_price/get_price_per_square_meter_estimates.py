@@ -359,22 +359,22 @@ def render_price_per_square_meter_estimations_tab():
                     unsafe_allow_html=True,
                 )
 
-            if sample_size > 4:
-                # Display the plot at the bottom
-                display_kde_plot(min_prices, max_prices, "bottom")
-                st.markdown(
-                    f"""
-                    <h6 style='text-align: left; color: red;'>Average square meter price: {format_currency(mean_value)} <br>
-                    <span style='color: blue;'>Median square meter price: {format_currency(median_value)}</span> <br> 
-                    <span style='color: green;'>50% of the relevant properties have a square meter price between {format_currency(q25_value)}
-                    and {format_currency(q75_value)} (25-75 percentiles)</span> <br>
-                    <span style='color: Purple;'>The lowest price per square meter is {format_currency(min_value)}
-                    and the highest is {format_currency(max_value)}</span> <br>
-                    <span style='color: black;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
-                    </h6>
-                    """,
-                    unsafe_allow_html=True,
-                )
+        if sample_size > 4:
+            # Display the plot at the bottom
+            display_kde_plot(min_prices, max_prices, "bottom")
+            st.markdown(
+                f"""
+                <h6 style='text-align: left; color: red;'>Average square meter price: {format_currency(mean_value)} <br>
+                <span style='color: blue;'>Median square meter price: {format_currency(median_value)}</span> <br> 
+                <span style='color: green;'>50% of the relevant properties have a square meter price between {format_currency(q25_value)}
+                and {format_currency(q75_value)} (25-75 percentiles)</span> <br>
+                <span style='color: Purple;'>The lowest price per square meter is {format_currency(min_value)}
+                and the highest is {format_currency(max_value)}</span> <br>
+                <span style='color: black;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
+                </h6>
+                """,
+                unsafe_allow_html=True,
+            )
 
     else:
         with top_text_placeholder:
