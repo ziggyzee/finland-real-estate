@@ -353,7 +353,7 @@ def render_price_per_square_meter_estimations_tab():
                     and {format_currency(q75_value)} (25-75 percentiles)</span> <br>
                     <span style='color: Purple;'>The lowest price per square meter is {format_currency(min_value)}
                     and the highest is {format_currency(max_value)}</span> <br>
-                    <span style='color: black;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
+                    <span style='color: grey;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
                     </h6>
                     """,
                     unsafe_allow_html=True,
@@ -370,7 +370,7 @@ def render_price_per_square_meter_estimations_tab():
                 and {format_currency(q75_value)} (25-75 percentiles)</span> <br>
                 <span style='color: Purple;'>The lowest price per square meter is {format_currency(min_value)}
                 and the highest is {format_currency(max_value)}</span> <br>
-                <span style='color: black;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
+                <span style='color: grey;'>The plot and metrics are based on {sample_size} relevant property transactions</span> <br>
                 </h6>
                 """,
                 unsafe_allow_html=True,
