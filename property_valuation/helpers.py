@@ -4,6 +4,10 @@ import numpy as np
 import requests
 
 
+def generate_key(unique_str: str):
+    return str(f"property-valuation-{unique_str}")
+
+
 def build_where_clause(
     postal_codes_input_text,
     selected_built_year_range,
@@ -54,7 +58,7 @@ def build_where_clause(
     return where_clause
 
 
-api_url = "http://51.20.64.222:8000/property-price-valuation/"
+api_url = "http://0.0.0.0:8000/property-price-valuation/"
 
 # Function to call the API
 def call_api(payload):
