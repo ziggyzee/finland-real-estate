@@ -2,7 +2,6 @@ import streamlit as st
 from datetime import datetime
 from experimental.helpers import (
     process_postal_codes,
-    format_currency,
     call_api,
     build_where_clause,
     display_kde_plot,
@@ -11,25 +10,39 @@ from experimental.helpers import (
 import pandas as pd
 
 
-def render_experimental_tab():
-    query_params = st.query_params.to_dict()
+def show_popup():
+    st.markdown(
+        """
+        <div id="popup" style="display: block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        background-color: white; padding: 20px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); z-index: 1000;">
+            <h2>Minimal Result Violation</h2>
+            <p>
+                Your search parameters yielded less than 4 property transactions.
+                In order to see results, please widen your filters and try again 
+            </p>
+        </div>
+        <div id="overlay" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background-color: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    # Initialize session state for plots
-    if 'plots' not in st.session_state:
-        st.session_state.plots = None
-
-    # Create placeholders for the charts
-    top_plot_placeholder = st.empty()
-
+def display_estimation(query_params):
     postal_codes_input_text = query_params.get('postal_code', [])
 
     current_year = datetime.now().year
     end_year = current_year + 2
     selected_start_year = query_params.get('start_year', 1880)
     selected_end_year = query_params.get('end_year', end_year)
+    if (int(selected_end_year) - int(selected_start_year)) < 5:
+        selected_start_year = str(int(selected_start_year) - 2)
+        selected_end_year = str(int(selected_end_year) + 2)
 
     selected_min_square_meter = query_params.get('min_m2', 25)
     selected_max_square_meter = query_params.get('max_m2', 85)
+    if (int(selected_max_square_meter) - int(selected_min_square_meter)) < 4:
+        selected_min_square_meter = str(int(selected_min_square_meter) - 2)
+        selected_max_square_meter = str(int(selected_max_square_meter) + 2)
 
     selected_cities = string_to_list(query_params.get('cities', None))
 
@@ -59,7 +72,6 @@ def render_experimental_tab():
     if "bad" in selected_room_number_input:
         selected_property_condition_options.append("huono")
 
-
     where_clause = build_where_clause(
         postal_codes_input_text,
         [selected_start_year, selected_end_year],
@@ -76,7 +88,15 @@ def render_experimental_tab():
 
     response_data, error = call_api(payload)
     if error:
-        st.error(f"API call failed: {error}")
+        return st.markdown(
+            f"""
+                <h6 style='text-align: center; color: black;font-family: Arial, sans-serif; font-size: 20px; font-weight: bold;'> 
+                Your search parameters yielded less than 4 property transactions.
+                Please widen your filters in order to see results
+                </h6>
+                """,
+            unsafe_allow_html=True,
+        )
     else:
         avg_prices_per_square_meter = [
             (min_price + max_price) / 2
@@ -96,42 +116,8 @@ def render_experimental_tab():
             max_value = max(avg_prices_per_square_meter)
             min_prices = response_data["min_prices_per_square_meter"]
             max_prices = response_data["max_prices_per_square_meter"]
-            st.session_state.plots = {
-                "min_prices": min_prices,
-                "max_prices": max_prices,
-                "mean_value": mean_value,
-                "median_value": median_value,
-                "q25_value": q25_value,
-                "q75_value": q75_value,
-                "min_value": min_value,
-                "max_value": max_value,
-                "sample_size": sample_size,
-            }
+
+            return display_kde_plot(min_prices, max_prices, "top")
+
         else:
-            st.session_state.plots = None
-            st.markdown(
-                f"""
-                <h6 style='text-align: left; color: red;'> 
-                Your search parameters yielded less than 4 property transactions.
-                Please widen your filters in order to see results
-                </h6>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    # Display the plots if they exist in session state
-    if st.session_state.plots:
-        min_prices = st.session_state.plots["min_prices"]
-        max_prices = st.session_state.plots["max_prices"]
-        mean_value = st.session_state.plots["mean_value"]
-        median_value = st.session_state.plots["median_value"]
-        q25_value = st.session_state.plots["q25_value"]
-        q75_value = st.session_state.plots["q75_value"]
-        min_value = st.session_state.plots["min_value"]
-        max_value = st.session_state.plots["max_value"]
-        sample_size = st.session_state.plots["sample_size"]
-
-        # Display the plot at the top
-        with top_plot_placeholder:
-            if sample_size > 4:
-                display_kde_plot(min_prices, max_prices, "top")
+            show_popup()

@@ -122,17 +122,17 @@ def display_kde_plot(min_prices_per_square_meter: List[float], max_prices_per_sq
 
     # Convert density to percentage points and set custom hover text
     for trace in fig.data:
-        trace.y = trace.y * 100
+        trace.y = trace.y * 100 * 100
         trace.hovertemplate = 'Price per square meter: %{x:,.0f}<extra></extra>'
 
-
+    # Find the maximum y value of the KDE plot
+    max_y_value = max(y for trace in fig.data for y in trace.y)
     # Add vertical lines for the statistics
-    for value, label, color, spacing in zip(
-        [mean_value, median_value, q25_value, q75_value, min_value, max_value],
-        ['Mean', 'Median', 'Q25', 'Q75', 'Min', 'Max'],
-        ['Red', 'Blue', 'Green', 'Green', 'Purple', 'Purple'],
-        [1, 0.9, 0.1, 0.1, 0.4, 0.4]
-    ):
+    for i, (value, label, color) in enumerate(zip(
+            [mean_value, median_value, q25_value, q75_value, min_value, max_value],
+            ['Mean', 'Median', 'Q25', 'Q75', 'Min', 'Max'],
+            ['Red', 'Blue', 'Green', 'Green', 'Purple', 'Purple']
+    )):
         fig.add_shape(
             type="line",
             x0=value,
@@ -143,13 +143,27 @@ def display_kde_plot(min_prices_per_square_meter: List[float], max_prices_per_sq
             yref='paper',
             line=dict(color=color, width=2, dash="dash"),
         )
-
-    # Find the maximum y value of the KDE plot
-    max_y_value = max(y for trace in fig.data for y in trace.y)
+        fig.add_annotation(
+            x=value,
+            y=max_y_value * (1.05 - i * 0.1),  # Position the label slightly above the plot
+            bgcolor="yellow",
+            bordercolor=color,
+            text=f"{format_currency(value)}",
+            showarrow=False,
+            font=dict(color=color, size=16),
+            align="left"
+        )
 
     # Customize the layout
     fig.update_layout(
-        title='KDE Plot of Prices per Square Meter',
+        title={
+            'text': f'Metrics based on {len(min_prices_per_square_meter)} relevant property transactions',
+            'x': 0.5,  # Center the title
+            'xanchor': 'center',  # Anchor the title to the center
+            'font': {
+                'size': 16  # Increase the title font size
+            }
+        },
         xaxis_title='Price per Square Meter',
         yaxis_title='Density (%)',
         yaxis=dict(range=[0, max_y_value * 1.1]),  # Set y-axis range slightly larger than the max y value
@@ -163,4 +177,4 @@ def display_kde_plot(min_prices_per_square_meter: List[float], max_prices_per_sq
 
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGray', tickmode='linear', tick0=0, dtick=500)
     # Display the chart in Streamlit
-    st.plotly_chart(fig, key=key)
+    st.plotly_chart(fig, key=key, use_container_width=True)
