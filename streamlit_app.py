@@ -1,22 +1,38 @@
 import streamlit as st
-from property_valuation.property_valuation_tab import render_property_valuation_tab
-from estimate_square_meter_price.get_price_per_square_meter_estimates import render_price_per_square_meter_estimations_tab
-from experimental.get_price_per_square_meter_estimates import render_experimental_tab
+from experimental.experimental import display_estimation
 
-# Create tabs
-#price_per_square_meter_estimations_tab, property_valuation_tab, experimental_tab = st.tabs(["Price per Square Meter Estimation", "Property Valuation", "experimental"])
+# Set the page layout to wide
+st.set_page_config(layout="wide")
 
-#with price_per_square_meter_estimations_tab:
-#    render_price_per_square_meter_estimations_tab()
-#
-#with property_valuation_tab:
-#    render_property_valuation_tab()
+st.markdown(
+    """
+    <style>
+    /* Target the specific element */
+    #root > div:nth-child(1) > div.withScreencast > div > div > section > div.stMainBlockContainer.block-container.st-emotion-cache-1ibsh2c.ekr3hml4 {
+        padding: 1rem !important;  /* Set minimal padding */
+        height: 100vh;  /* Set height to full viewport height */
+        box-sizing: border-box;  /* Ensure padding and border are included in the element's total width and height */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-# Create tabs
-experimental_tab, property_valuation_tab = st.tabs(["Price per Square Meter Estimation", "Property Valuation"])
+# Get the query parameters
+query_params = st.query_params.to_dict()
 
-with experimental_tab:
-    render_experimental_tab()
+# Create placeholders for the charts
+top_plot_placeholder = st.empty()
 
-with property_valuation_tab:
-    render_property_valuation_tab()
+# Check if the 'page' parameter is set to 'estimation'
+if query_params.get('page') == 'estimation':
+    # Import and run the estimation page
+    top_plot_placeholder = display_estimation(query_params)
+
+else:
+    # Default content for the main page
+    st.title("Welcome to the Real Estate App")
+    st.write("Use the navigation to go to different pages.")
+    if st.button("Go to Estimation Page"):
+        query_params['page'] = 'estimation'
+        top_plot_placeholder = display_estimation(query_params)
